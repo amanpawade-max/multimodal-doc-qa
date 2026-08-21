@@ -1,0 +1,11 @@
+PyMuPDF>=1.23.8
+chromadb>=0.4.24
+anthropic>=0.34.0
+openai>=1.30.0
+google-genai>=0.3.0
+sentence-transformers>=2.6.0
+numpy>=1.26.0
+pandas>=2.0.0
+pillow>=10.0.0
+python-dotenv>=1.0.0
+streamlit>=1.33.0
