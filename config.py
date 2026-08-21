@@ -66,6 +66,10 @@ class Config:
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "120"))
     TOP_K: int = int(os.getenv("TOP_K", "6"))
+    # A vector search can return several loosely related figure captions.
+    # Keep general text context broad, but return only the strongest visual
+    # match unless an application explicitly requests more.
+    MAX_RETRIEVED_IMAGES: int = int(os.getenv("MAX_RETRIEVED_IMAGES", "1"))
     CONTEXT_NEIGHBOR_CHARS: int = int(os.getenv("CONTEXT_NEIGHBOR_CHARS", "400"))
 
     # --- Extraction --------------------------------------------------------

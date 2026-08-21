@@ -8,7 +8,7 @@ from config import config
 from src.extract import extract_pdf, chunk_text_elements
 from src.vision_summarize import caption_image
 from src.embed_store import VectorStore
-from src.retrieve import retrieve, RetrievedItem
+from src.retrieve import retrieve, select_image_items, RetrievedItem
 
 
 def ingest(pdf_path: str, store: VectorStore | None = None, verbose: bool = True) -> VectorStore:
@@ -57,13 +57,15 @@ def _build_context_blocks(items: list[RetrievedItem]) -> list[dict]:
     )
     blocks.append({"type": "text", "text": "Retrieved context:\n\n" + header})
 
-    for i, it in enumerate(items):
-        if it.type in ("table", "figure") and it.image_path:
+    for it in select_image_items(items):
+        if it.image_path:
             try:
                 mime, _ = mimetypes.guess_type(it.image_path)
                 with open(it.image_path, "rb") as f:
                     data = base64.standard_b64encode(f.read()).decode("utf-8")
-                blocks.append({"type": "text", "text": f"Source image for [{i+1}]:"})
+                blocks.append(
+                    {"type": "text", "text": f"Source image ({it.doc_name} p.{it.page}):"}
+                )
                 blocks.append(
                     {"type": "image", "source": {"type": "base64", "media_type": mime or "image/png", "data": data}}
                 )

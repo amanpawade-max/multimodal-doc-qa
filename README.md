@@ -74,7 +74,8 @@ streamlit run app.py
 ## Config
 
 All tunables live in `config.py` and can be overridden via environment
-variables: chunk size/overlap, top-k, embedding provider (local
+variables: chunk size/overlap, top-k, `MAX_RETRIEVED_IMAGES` (defaults to one
+best-matching table/figure crop), embedding provider (local
 sentence-transformers or OpenAI), which models to use for vision captioning
 vs. final generation, and where data is stored on disk (`./data` by
 default — `./data/images` for crops, `./data/index` for the ChromaDB store).

@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from config import config
 from src.embed_store import VectorStore
 
 
@@ -42,3 +43,31 @@ def retrieve(store: VectorStore, question: str, top_k: int | None = None) -> lis
             )
         )
     return items
+
+
+def select_image_items(
+    items: list[RetrievedItem], max_images: int | None = None
+) -> list[RetrievedItem]:
+    """Return only the best visual retrievals for a result gallery.
+
+    ``items`` remains useful as broad text context, but every table/figure in
+    a top-k vector result is not necessarily an answer to an image request.
+    Chroma returns results in ascending cosine distance, so selecting the
+    first distinct image paths keeps the highest-ranked visual source(s).
+    """
+    limit = config.MAX_RETRIEVED_IMAGES if max_images is None else max_images
+    if limit <= 0:
+        return []
+
+    selected: list[RetrievedItem] = []
+    seen_paths: set[str] = set()
+    for item in items:
+        if item.type not in ("table", "figure") or not item.image_path:
+            continue
+        if item.image_path in seen_paths:
+            continue
+        selected.append(item)
+        seen_paths.add(item.image_path)
+        if len(selected) == limit:
+            break
+    return selected
