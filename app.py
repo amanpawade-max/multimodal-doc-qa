@@ -1,5 +1,4 @@
 """Streamlit UI.
-
 Run with: streamlit run app.py
 """
 import tempfile
@@ -9,7 +8,8 @@ import streamlit as st
 
 from src.pipeline import ingest, answer
 from src.embed_store import VectorStore
-from src.retrieve import retrieve
+from src.retrieve import retrieve, select_image_items
+from config import config
 
 st.set_page_config(page_title="Document QA", layout="wide")
 st.title("Multimodal document QA")
@@ -37,7 +37,10 @@ with st.sidebar:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-        for img in msg.get("images", []):
+        # Older messages can contain multiple source images from before the
+        # gallery limit was introduced, so apply the limit while replaying
+        # chat history too.
+        for img in msg.get("images", [])[:config.MAX_RETRIEVED_IMAGES]:
             st.image(img, width=320)
 
 question = st.chat_input("Ask a question about the indexed document(s)")
@@ -51,7 +54,10 @@ if question:
             items = retrieve(st.session_state.store, question)
             reply = answer(question, store=st.session_state.store)
         st.markdown(reply)
-        images = [it.image_path for it in items if it.type in ("table", "figure") and it.image_path]
+        # A top-k context search can include loosely related visual chunks.
+        # Display only the strongest visual match, while retaining all hits
+        # as text context for answer generation.
+        images = [it.image_path for it in select_image_items(items)]
         for img in images:
             if os.path.exists(img):
                 st.image(img, width=320, caption="Retrieved source")
